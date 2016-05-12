@@ -1,10 +1,11 @@
 services:
-    textyCmpModel:
-        class: App\Components\TextDbParamCmp\Model\Texty
-    textyCmpForm:
-        class: App\Components\TextCmp\Forms\TextFormFactory
-    textCmp:
-        class: App\Components\TextCmp\TextCmpFactory
+    menuCmpModel:
+        class: App\Components\MenuCmp\Model\Menu
+    polozkyMenuCmpModel:
+        class: App\Components\MenuCmp\Model\PolozkyMenu
+    menuCmp:
+        class: App\Components\MenuCmp\MenuCmpFactory
+        inject: yes
 
 production < common:
 

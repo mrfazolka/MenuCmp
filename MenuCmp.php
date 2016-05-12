@@ -1,25 +1,31 @@
 <?php
-namespace App\Components\TextCmp;
+namespace App\Components\MenuCmp;
 
 use \App\MyFunctions\Func;
 
-class TextCmp extends \App\Components\BaseStandardCmp\BaseStandardCmp
+class MenuCmp extends \App\Components\BaseStandardCmp\BaseStandardCmp
 {    
-    /** @var TextCmpFactory factory  */
+    /** @var MenuCmpFactory factory */
     /** @var int id */
+    
     
     //TODO: do BaseStandardCmp dát, $model = $this->factory->modelTexty; $row = $model->findOneById(...); tady odstranit kod který se duplikuje (row=findObyById)
     public function renderDefault()
     {
         $this->setTemplate();
 	
-	if(!$row = $this->factory->modelTexty->findOneById($this->id)){ //když nebyl záznam nalezen, založ nový
-	    $row = $this->factory->modelTexty->insert(Func::arrHash(array("id"=>$this->id, "text"=>"New text.")));
+	if(!$row = $this->factory->modelMenu->findOneById($this->id)){ //když nebyl záznam nalezen, založ nový
+//	    $row = $this->factory->modelTexty->insert(Func::arrHash(array("id"=>$this->id, "text"=>"New text.")));
 	    $this->flashMessage("Komponentě nebyl přiřazen žádný záznam, proto byl založen nový :)");
+	    $polozky = null;
+	}
+	else{
+	    $polozky = $this->factory->modelPolozkyMenu->findBy(array("menu_id"=>$row->id, "viditelnost"=>TRUE))->order("poradi");
 	}
 	
 	$this->template->row = $row;
-	$this->template->cmpId = $this->getUniqueId();
+	
+	$this->template->polozkyMenu = $polozky;
     }
     
     public function renderEdit()
@@ -91,31 +97,34 @@ class TextCmp extends \App\Components\BaseStandardCmp\BaseStandardCmp
 	}
     }
     
-    public function handleUpdateText()
+    public function handleUpdateMenuItemsPosition()
     {
+	$postParams = $this->presenter->context->getByType('Nette\Http\Request')->getPost();
         if($this->presenter->user->isAllowed("sprava-obsahu")){
-	    $editorText = $this->presenter->getRequest()->getPost("textData");
-	    $this->factory->modelTexty->update($this->id, $editorText);
+	    $queryStr = "UPDATE polozky_menu SET poradi = case id ";
+	    foreach($postParams["menuItems"] as $itemId){
+		$poradi = array_search($itemId, $postParams["menuItems"]);
+		$queryStr .= "when $itemId then $poradi ";
+	    }
+	    $arrValues = implode(",", $postParams["menuItems"]);
+	    $queryStr .= "end WHERE id in ($arrValues)";
+	    
+	    $dbCon = $this->presenter->context->getService("database.default");
+	    $result = $dbCon->query($queryStr);
+	    
+	    if ($this->presenter->isAjax()){
+		$this->redrawControl();
+	    }
 	}
-        
-	if ($this->presenter->isAjax()){
-	    $this->redrawControl();
-        }
     }
 }
 
-class TextCmpFactory extends \App\Components\BaseCmp\BaseCmpFactory{    
-    /** @var \App\Components\TextDbParamCmp\Model\Texty */
-    public $modelTexty;
-    /** @var \App\Forms\TextFormFactory */
-    public $textFormFactory;
+class MenuCmpFactory extends \App\Components\BaseCmp\BaseCmpFactory{    
+    /** @inject @var Model\Menu */
+    public $modelMenu;
+    /** @inject @var Model\PolozkyMenu */
+    public $modelPolozkyMenu;
     
-//    const inQuickAddMenu = false;
-    const title = "Text";
-        
-    public function __construct(\App\Components\TextDbParamCmp\Model\Texty $texty, \App\Components\TextCmp\Forms\TextFormFactory $textFormFactory)
-    {
-	$this->modelTexty = $texty;
-        $this->textFormFactory = $textFormFactory;
-    }
+    const inQuickAddMenu = false;
+    const title = "Menu";
 }

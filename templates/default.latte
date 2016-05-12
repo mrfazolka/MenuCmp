@@ -1,52 +1,38 @@
 {extends '../../@layout.latte'}
 
+{block scripts}
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script>
+	$(function() {
+	  $( "#menu{!$uniqueId}" ).sortable({
+		axis: 'x',
+		update: function (event, ui) {
+		    var data = $(this).sortable('serialize');
+		    console.log(ui.item.index(), data);
+		    // POST to server using $.post or $.ajax
+		    $.nette.ajax({
+			data: data,
+			type: 'POST',
+			url: {link updateMenuItemsPosition!}
+		    });
+		}
+	  });
+	  $( "#menu{!$uniqueId}" ).disableSelection();
+	});
+    </script>
+{/block}
+
 {block content}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+
     {if $user->isAllowed("sprava-obsahu")}        
         <div class="componentTextControlButtonWrap"><a href="{link edit!}#{$uniqueId}" class="button ajax">Upravit</a></div>
-	<div id="{$cmpId."InlineEdit"}" contenteditable="true">
-	    {!$row->text}
-	</div>
-	<script>
-	    // Turn off automatic editor creation first.
-	    CKEDITOR.disableAutoInline = true;
-//	    var obj = { toolbar : [
-//			    { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ], items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat' ] },
-//			    { name: 'paragraph', groups: [ 'list' ], items: [ 'NumberedList', 'BulletedList' ] },
-//			    { name: 'links', items: [ 'Link', 'Unlink' ] },
-//			    { name: 'insert', items: [ 'Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe' ] },
-//			    { name: 'styles', items: [ 'Styles', 'Format', 'Font', 'FontSize' ] },
-//			] };
-//	    var ck = CKEDITOR.inline( {$cmpId."InlineEdit"}, obj );
-
-	    var lastSaveStatus = false;
-	    var ck = CKEDITOR.inline( {$cmpId."InlineEdit"} );
-	    ck.on( 'instanceReady', function( ev ) {
-		var editor = ev.editor;
-		editor.setReadOnly( false );
-		
-		{* hide toolbar *}
-		var bar = document.getElementById("cke_"+editor.name).getElementsByClassName("cke_top")[0];
-		bar.style.display = "none";
-		
-		$("#"+editor.name).focusout(function() {
-		    $.nette.ajax({
-			type: 'POST',
-			url: {link updateText!},
-			data: {"textData": editor.getData()}
-		      }).done(function() {
-			  lastSaveStatus = true;
-		      });
-		});
-		
-		$("#"+editor.name).blur(function() {
-		    {* hide toolbar *}
-		    var bar = document.getElementById("cke_"+editor.name).getElementsByClassName("cke_top")[0];
-		    bar.style.display = "none";
-		});
-		 
-	    });
-	</script>
-    {else}
-	{!$row->text}
+    {/if}
+    {if $polozkyMenu}
+	<ul id="menu{$uniqueId}" class="nav navbar-nav navbar-right">
+	    {foreach $polozkyMenu as $polozkamenu}
+		<li{ifCurrent $polozkamenu->link, $polozkamenu->param} class="active"{/ifCurrent} id="menuItems_{$polozkamenu->id}"><a href="{plink $polozkamenu->link, $polozkamenu->param}">{$polozkamenu->nazev}</a></li>
+	    {/foreach}
+	</ul>
     {/if}
 {/block}

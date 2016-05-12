@@ -1,6 +1,6 @@
 {
-    "name": "TextCmp",
-    "description": "SmartCmp for text editing",
+    "name": "MenuCmp",
+    "description": "Menu SmartCmp",
     "version": "1.0.0",
     
     "authors": [
