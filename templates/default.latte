@@ -1,17 +1,17 @@
 {extends '../../@layout.latte'}
 
 {block scripts}
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="{$basePath}/js/jquery-ui1.11.14.js"></script>
     <script>
 	$(function() {
 	  $( "#menu{!$uniqueId}" ).sortable({
 		axis: 'x',
 		update: function (event, ui) {
 		    var data = $(this).sortable('serialize');
-		    console.log(ui.item.index(), data);
+//		    console.log(ui.item.index(), data);
 		    // POST to server using $.post or $.ajax
 		    $.nette.ajax({
-			data: data,
+			data: { menuPos: data },
 			type: 'POST',
 			url: {link updateMenuItemsPosition!}
 		    });
@@ -23,7 +23,7 @@
 {/block}
 
 {block content}
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="{$basePath}/css/jquery-ui_smoothness1.11.14.css">
 
     {if $user->isAllowed("sprava-obsahu")}        
         <div class="componentTextControlButtonWrap"><a href="{link edit!}#{$uniqueId}" class="button ajax">Upravit</a></div>
@@ -31,7 +31,13 @@
     {if $polozkyMenu}
 	<ul id="menu{$uniqueId}" class="nav navbar-nav navbar-right">
 	    {foreach $polozkyMenu as $polozkamenu}
-		<li{ifCurrent $polozkamenu->link, $polozkamenu->param} class="active"{/ifCurrent} id="menuItems_{$polozkamenu->id}"><a href="{plink $polozkamenu->link, $polozkamenu->param}">{$polozkamenu->nazev}</a></li>
+		{if !strpos($polozkamenu->cmpbase_stranky->slug, ":")}
+		    {var link = "SmartPages:default"}
+		    {var slug = str_replace("/", "", $polozkamenu->cmpbase_stranky->slug)}
+		    <li{ifCurrent $link, $slug} class="active"{/ifCurrent} id="menuItems_{$polozkamenu->id}"><a href="{plink $link, $slug}">{$polozkamenu->nazev}</a></li>
+		{else}
+		    <li{ifCurrent $polozkamenu->cmpbase_stranky->slug} class="active"{/ifCurrent} id="menuItems_{$polozkamenu->id}"><a href="{plink $polozkamenu->cmpbase_stranky->slug}">{$polozkamenu->nazev}</a></li>
+		{/if}
 	    {/foreach}
 	</ul>
     {/if}

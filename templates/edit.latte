@@ -1,54 +1,41 @@
 {extends '../../@layout.latte'}
 
 {block scripts}
-    {* soubor config.js je modifikován oproti defaultní verzi *}
-    <script src="{$basePath}/assets/ckeditor/ckeditor.js"></script>
+    <script src="{$basePath}/js/jquery-ui1.11.14.js"></script>
     <script>
-        $(function () 
-        {
-	    {* //zajistí, aby se instance ckeditoru refreshla při jeho změně - aby se projevila změna hodnoty v textaree - bez tohoto se neuloží změněný text(zůstane stejný) *}
-	    CKEDITOR.on("instanceReady", function(event)
-	    {
-		for (var i in CKEDITOR.instances) {
-//		    CKEDITOR.instances[i].setData("test");
-		    CKEDITOR.instances[i].on('change', function() {
-			//console.log("change", this.name);
-			CKEDITOR.instances[i].updateElement();
-			$("#"+this.name).val(this.getData());
+	$(function() {
+	  $( "#menu{!$uniqueId}" ).sortable({
+		axis: 'x',
+		update: function (event, ui) {
+		    var data = $(this).sortable('serialize');
+//		    console.log(data, data.cmpMode);
+//		    console.log(ui.item.index(), data);
+		    // POST to server using $.post or $.ajax
+		    $.nette.ajax({
+			data: { menuPos: data, cmpMode: "edit" }, {* aby se nepřerenderovalo menu do default modu, odešlu v cmpMode informaci o tom, že menu má být v edit modu *}
+			type: 'POST',
+			url: {link updateMenuItemsPosition!}
 		    });
 		}
-	    });
-	    
-            CKEDITOR.replace( 'ckeditor{!$cmpId}' , 
-            {
-                filebrowserBrowseUrl: '{!$baseUri}/assets/kcfinder/browse.php?opener=ckeditor&type=files',
-                filebrowserImageBrowseUrl: '{!$baseUri}/assets/kcfinder/browse.php?opener=ckeditor&type=images',
-                filebrowserFlashBrowseUrl: '{!$baseUri}/assets/kcfinder/browse.php?opener=ckeditor&type=flash',
-                filebrowserUploadUrl: '{!$baseUri}/assets/kcfinder/upload.php?opener=ckeditor&type=files',
-                filebrowserImageUploadUrl: '{!$baseUri}/assets/kcfinder/upload.php?opener=ckeditor&type=images',
-                filebrowserFlashUploadUrl: '{!$baseUri}/assets/kcfinder/upload.php?opener=ckeditor&type=flash'
-            });
-            
-            //checkContainer();
-        });
-        
-        //pro ruční nastavení správných hodnot do textarey formu, aby se data z ckeditoru uložila
-//        function checkContainer () {
-//            if($("iframe").contents().find(".cke_editable p").is(':visible')){ //if the container is visible on the page
-//                var editBox = $("iframe").contents().find(".cke_editable p");
-//                //alert($("iframe").contents().find(".cke_editable p").html());
-//                editBox.bind("DOMSubtreeModified",function(){
-//                  $("#ckeditor").html(editBox.html());
-//                });
-//            } else {
-//              setTimeout(checkContainer, 50); //wait 50 ms, then try again
-//            }
-//        }
+	  });
+	  $( "#menu{!$uniqueId}" ).disableSelection();
+	});
     </script>
 {/block}
 
 {block content}
-    <div class="editTxtCtr">
-        {control editForm}
-    </div>
+    <link rel="stylesheet" href="{$basePath}/css/jquery-ui_smoothness1.11.14.css">
+
+    {if $user->isAllowed("sprava-obsahu")}        
+        <div class="componentTextControlButtonWrap"><a href="{link edit!}#{$uniqueId}" class="button ajax">Upravit</a></div>
+    {/if}
+    {if $polozkyMenu}
+	<ul id="menu{$uniqueId}" class="nav navbar-nav navbar-right">
+	    {foreach $polozkyMenu as $polozkamenu}
+		{var link = "SmartPages:default"}
+		{var slug = str_replace("/", "", $polozkamenu->cmpbase_stranky->slug)}
+		<li{if $control->isLinkCurrent("editMenuItem!", $polozkamenu->id)} class="active"{/if} id="menuItems_{$polozkamenu->id}"><a class="ajax" href="{link editMenuItem!, $polozkamenu->id}">{$polozkamenu->nazev}</a></li>
+	    {/foreach}
+	</ul>
+    {/if}
 {/block}

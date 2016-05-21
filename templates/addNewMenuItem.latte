@@ -4,12 +4,9 @@
 {/block}
 
 {block content}
-    {ifset $menuItem}
 	{form editMenuItem}
-	    {var link = "SmartPages:default"}
-	    {var slug = str_replace("/", "", $menuItem->cmpbase_stranky->slug)}
-	    {label nazev /}: <a n:href="deleteItem!, $menuItem->id" style="float: right" class="ajax">odstranit</a><br />
-	    {input nazev}{input submit, style=>"float: right", class=>"btn btn-default ajax"}<br />
+	    {label nazev /}: {input submit, style=>"float: right", class=>"btn btn-default ajax"}<br />
+	    {input nazev}<br />
 	    {label page /}:<br />
 	    {input page}
 	{/form}
@@ -23,7 +20,4 @@
 	    {/if}
 	    <a href="#" onclick="document.getElementById('pageSelect').value='{$page->id}'">{$page->title|truncate:20}</a> | <a href="{$url}">náhled</a><br />
 	{/foreach}
-    {else}
-	Klikněte na položku v menu, kterou chcete upravit, nebo <a n:href="addItem!" class="ajax">přidejte <i class="fa fa-plus-circle" aria-hidden="true"></i></a> novou položku menu.
-    {/ifset}
 {/block}
